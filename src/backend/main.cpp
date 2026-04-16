@@ -1,13 +1,16 @@
 #include <iostream>
-#include "lexer.h"
+#include "lexer.cpp"
 
 int main() {
     // Example
-    std::string sourceCode =
-        "if x = 10 then\n"
-        "  x := x + 1;\n"
-        "end\n"
-        "{ this is a comment and should be ignored }\n";
+    // std::string sourceCode =
+    //     "if x = 10 then\n"
+    //     "  x := x + 1;\n"
+    //     "end\n"
+    //     "{ this is a comment and should be ignored }\n";
+
+    std::string sourceCode;
+    std::getline(std::cin, sourceCode); // Read a line of input
 
     Scanner scanner(sourceCode);
     std::vector<Token> tokens = scanner.scanAll();

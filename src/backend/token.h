@@ -37,6 +37,8 @@ struct Token {
     TokenType type;
     std::string lexeme;
     int line;
+    int startIndex;
+    int length;
 
     std::string toString() const {
         return tokenToString(type);
