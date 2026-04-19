@@ -181,4 +181,30 @@ highlightPanel.addEventListener("mouseleave", () => {
   tooltip.style.opacity = "0";
 });
 
+// --- Theme Switcher ---
+const customSelect = document.getElementById("theme-switcher");
+const selectedDiv = customSelect.querySelector(".select-selected");
+const itemsDiv = customSelect.querySelector(".select-items");
+
+selectedDiv.addEventListener("click", function (e) {
+  e.stopPropagation();
+  this.classList.toggle("select-arrow-active");
+  itemsDiv.classList.toggle("select-hide");
+});
+
+const options = itemsDiv.querySelectorAll("div[data-value]");
+options.forEach((option) => {
+  option.addEventListener("click", function () {
+    selectedDiv.innerHTML = this.innerHTML;
+    document.body.dataset.theme = this.dataset.value;
+    selectedDiv.classList.remove("select-arrow-active");
+    itemsDiv.classList.add("select-hide");
+  });
+});
+
+document.addEventListener("click", function () {
+  selectedDiv.classList.remove("select-arrow-active");
+  itemsDiv.classList.add("select-hide");
+});
+
 tokenize();

@@ -8,7 +8,21 @@
   </head>
   <body>
     <div class="header-controls">
-      <button onclick="tokenize()">Run</button>
+      <div class="left-controls">
+        <button onclick="tokenize()">Run</button>
+        <div id="theme-switcher" class="custom-select">
+          <div class="select-selected">VSCode Dark</div>
+          <div class="select-items select-hide">
+            <div class="select-group">Dark Themes</div>
+            <div data-value="default">Nord</div>
+            <div data-value="vscode-dark">VSCode Dark</div>
+            <div data-value="catppuccin">Catppuccin</div>
+            <div class="select-group">Light Themes</div>
+            <div data-value="rose-pine-dawn">Rosé Pine Dawn</div>
+            <div data-value="sakura">Sakura</div>
+          </div>
+        </div>
+      </div>
 
       <div class="legend">
         <div class="legend-item">
