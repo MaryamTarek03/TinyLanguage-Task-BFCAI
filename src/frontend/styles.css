@@ -5,6 +5,7 @@
   --keyword: #c586c0;
   --id: #9cdcfe;
   --number: #b5cea8;
+  --string: #ce9178;
   --operator: #d4d4d4;
   --unknown: #f44747;
   --accent: #007acc;
@@ -214,6 +215,9 @@ tr:hover {
 }
 .token-number {
   color: var(--number);
+}
+.token-string {
+  color: var(--string);
 }
 .token-operator {
   color: var(--operator);

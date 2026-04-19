@@ -4,7 +4,7 @@ enum TokenType {
     // Reserved Words
     IF_KW, THEN_KW, ELSE_KW, END_KW, REPEAT_KW, UNTIL_KW, READ_KW, WRITE_KW,
     // Other
-    ID, NUMBER,
+    ID, NUMBER, STRING,
     // Operators
     ADDOP, SUBOP, MULOP, DIVOP,
     COMPARISONOP, ASSIGNMENTOP,
@@ -22,7 +22,7 @@ std::string tokenToString(TokenType type) {
         case ELSE_KW: return "ELSE_KW"; case END_KW: return "END_KW";
         case REPEAT_KW: return "REPEAT_KW"; case UNTIL_KW: return "UNTIL_KW";
         case READ_KW: return "READ_KW"; case WRITE_KW: return "WRITE_KW";
-        case ID: return "ID"; case NUMBER: return "NUMBER";
+        case ID: return "ID"; case NUMBER: return "NUMBER"; case STRING: return "STRING";
         case ADDOP: return "ADDOP"; case SUBOP: return "SUBOP";
         case MULOP: return "MULOP"; case DIVOP: return "DIVOP";
         case COMPARISONOP: return "COMPARISONOP"; case ASSIGNMENTOP: return "ASSIGNMENTOP";

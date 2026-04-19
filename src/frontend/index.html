@@ -24,6 +24,10 @@
           Number
         </div>
         <div class="legend-item">
+          <div class="color-box" style="background: var(--string)"></div>
+          String
+        </div>
+        <div class="legend-item">
           <div class="color-box" style="background: var(--operator)"></div>
           Operator/Symbol
         </div>
@@ -36,6 +40,7 @@
 
     <div class="container">
       <textarea id="sourceCode" spellcheck="false">
+write "Hello Lexer!";
 read x; { Example Program }
 if 0 < x then
   fact := 1;
@@ -43,7 +48,7 @@ if 0 < x then
     fact := fact * x;
     x := x - 1
   until x = 0;
-  write fact
+  write fact;
 end</textarea
       >
 

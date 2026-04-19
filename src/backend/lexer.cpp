@@ -92,6 +92,22 @@ public:
             return {NUMBER, lexeme, line, startPos, (int)lexeme.length()};
         }
 
+        // Strings
+        if (c == '"') {
+            std::string lexeme = "";
+            advance(); // Read the opening quote
+            while (peek() != '"' && !isEOF()) {
+                if (peek() == '\n') line++; // Allow multi-line strings
+                lexeme += advance();
+            }
+            if (isEOF()) { // Uncomplete string
+                // Maybe return an error token instead of UNKNOWN
+                return {UNKNOWN, lexeme, line, startPos, (int)lexeme.length() + 1};
+            }
+            advance(); // Read the closing quote
+            return {STRING, lexeme, line, startPos, (int)lexeme.length() + 2};
+        }
+
         // Symbols and Operators
         advance(); 
         std::string lexeme(1, c);
@@ -109,7 +125,7 @@ public:
             case ':':
                 if (peek() == '=') {
                     lexeme += advance();
-                    return {ASSIGNMENTOP, lexeme, line, startPos, 2}; // := is 2 chars!
+                    return {ASSIGNMENTOP, lexeme, line, startPos, 2}; // := is 2 chars
                 }
                 return {UNKNOWN, lexeme, line, startPos, 1};
             default:

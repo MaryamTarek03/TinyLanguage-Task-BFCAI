@@ -63,6 +63,7 @@ async function tokenize() {
       if (type.includes("_KW")) cssClass = "token-keyword";
       else if (type === "ID") cssClass = "token-id";
       else if (type === "NUMBER") cssClass = "token-number";
+      else if (type === "STRING") cssClass = "token-string";
       else if (type === "UNKNOWN") cssClass = "token-unknown";
 
       const span = document.createElement("span");
@@ -120,7 +121,6 @@ async function tokenize() {
   const highlightPanel = document.getElementById("highlight");
 
   highlightPanel.addEventListener("click", (e) => {
-
     if (e.target.classList.contains("token-keyword")) {
       const clickedWord = e.target.textContent.trim().toLowerCase();
 

@@ -59,7 +59,7 @@ app.Run();
 // Mirror the C++ enum exactly so we can translate the integers back to strings
 public enum TokenType {
     IF_KW, THEN_KW, ELSE_KW, END_KW, REPEAT_KW, UNTIL_KW, READ_KW, WRITE_KW,
-    ID, NUMBER,
+    ID, NUMBER, STRING,
     ADDOP, SUBOP, MULOP, DIVOP,
     COMPARISONOP, ASSIGNMENTOP,
     SEMICOLON, PUNCTUATION, COMMA,
