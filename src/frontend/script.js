@@ -11,6 +11,34 @@ function switchTab(tabId) {
   event.target.classList.add("active");
 }
 
+// Editor Line Numbers
+function updateLineNumbers() {
+  const code = document.getElementById("sourceCode").value;
+  const lines = code.split("\n").length;
+
+  const editorLineNumbers = document.getElementById("editor-line-numbers");
+  const highlightLineNumbers = document.getElementById(
+    "highlight-line-numbers",
+  );
+
+  let lineNumbersHtml = "";
+  for (let i = 1; i <= lines; i++) {
+    lineNumbersHtml += `<div>${i}</div>`;
+  }
+
+  editorLineNumbers.innerHTML = lineNumbersHtml;
+  highlightLineNumbers.innerHTML = lineNumbersHtml;
+}
+
+function syncScroll(sourceId, targetId) {
+  const source = document.getElementById(sourceId);
+  const target = document.getElementById(targetId);
+  target.scrollTop = source.scrollTop;
+}
+
+// Initial line numbers
+updateLineNumbers();
+
 // Debouncing Logic
 let debounceTimer;
 document.getElementById("sourceCode").addEventListener("input", () => {
@@ -29,21 +57,53 @@ document.getElementById("sourceCode").addEventListener("input", () => {
 
 async function tokenize() {
   const code = document.getElementById("sourceCode").value;
-  const outputDiv = document.getElementById("highlight");
+  const useTerminators = document.getElementById("use-terminators").checked;
+  const outputDiv = document.getElementById("highlight-content");
   const tableBody = document.getElementById("tableBody");
+  const errorList = document.getElementById("errorList");
+  const errorBadge = document.getElementById("error-badge");
 
   tableBody.innerHTML = "";
+  errorList.innerHTML = "";
 
   try {
-    const response = await fetch("http://localhost:5000/api/tokenize", {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: code,
-    });
+    const [tokenResponse, parseResponse] = await Promise.all([
+      fetch("http://localhost:5000/api/tokenize", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: code,
+      }),
+      fetch(
+        `http://localhost:5000/api/parse?useTerminators=${useTerminators}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: code,
+        },
+      ),
+    ]);
 
-    if (!response.ok) throw new Error("Server error");
+    if (!tokenResponse.ok || !parseResponse.ok) throw new Error("Server error");
 
-    const tokens = await response.json();
+    const tokens = await tokenResponse.json();
+    const parseErrors = await parseResponse.json();
+
+    // Render parser errors
+    if (parseErrors.length > 0) {
+      errorBadge.textContent = parseErrors.length;
+      errorBadge.style.display = "inline-block";
+
+      errorList.innerHTML = parseErrors
+        .map(
+          (err) =>
+            `<li><span class="line-col">Line ${err.line}:</span> <span class="msg">${err.message}</span></li>`,
+        )
+        .join("");
+    } else {
+      errorBadge.style.display = "none";
+      errorList.innerHTML = `<li><span class="msg" style="color: var(--number)">No syntax errors found.</span></li>`;
+    }
+
     outputDiv.innerHTML = "";
 
     let currentIndex = 0;
@@ -52,7 +112,19 @@ async function tokenize() {
     tokens.forEach((t) => {
       const [line, type, lexeme, start, length] = t;
 
-      if (type === "ENDFILE") return;
+      if (type === "ENDFILE") {
+        const eofError = parseErrors.find((e) => e.charIndex === start);
+        if (eofError) {
+          const span = document.createElement("span");
+          span.className = "token syntax-error-highlight";
+          span.innerHTML = "&nbsp;&nbsp;"; // Adds a visible space block for the end error
+          span.dataset.type = type;
+          span.dataset.line = line;
+          span.dataset.error = eofError.message;
+          outputDiv.appendChild(span);
+        }
+        return;
+      }
 
       if (start > currentIndex) {
         const gapText = code.substring(currentIndex, start);
@@ -71,6 +143,14 @@ async function tokenize() {
       span.textContent = code.substring(start, start + length);
       span.dataset.type = type;
       span.dataset.line = line;
+
+      // Check if there's a parse error at this token's position
+      const error = parseErrors.find((e) => e.charIndex === start);
+      if (error) {
+        span.classList.add("syntax-error-highlight");
+        span.dataset.error = error.message;
+      }
+
       outputDiv.appendChild(span);
 
       currentIndex = start + length;
@@ -166,8 +246,14 @@ highlightPanel.addEventListener("mousemove", (e) => {
   if (e.target.classList.contains("token")) {
     const type = e.target.dataset.type;
     const line = e.target.dataset.line;
+    const errorMsg = e.target.dataset.error;
 
-    tooltip.innerHTML = `<span class="tooltip-label">Type:</span> ${type}<br><span class="tooltip-label">Line:</span> ${line}`;
+    let tooltipContent = `<span class="tooltip-label">Type:</span> ${type}<br><span class="tooltip-label">Line:</span> ${line}`;
+    if (errorMsg) {
+      tooltipContent += `<br><span class="tooltip-label" style="color:var(--unknown)">Error:</span> <span style="color:var(--unknown)">${errorMsg}</span>`;
+    }
+
+    tooltip.innerHTML = tooltipContent;
 
     tooltip.style.opacity = "1";
     tooltip.style.left = e.clientX + 15 + "px";

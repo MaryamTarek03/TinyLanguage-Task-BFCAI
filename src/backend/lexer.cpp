@@ -5,6 +5,12 @@
 #include <unordered_map>
 #include "token.h"
 
+#ifdef _WIN32
+    #define API_EXPORT __declspec(dllexport)
+#else
+    #define API_EXPORT __attribute__((visibility("default")))
+#endif
+
 class Scanner {
 private:
     std::string source;
@@ -173,8 +179,7 @@ extern "C" {
 
     // The function C# will call
     // We use __attribute__((visibility("default"))) to ensure Linux exports it correctly in the .so file
-    __attribute__((visibility("default"))) 
-    LexResult Tokenize(const char* sourceCode) {
+    API_EXPORT LexResult Tokenize(const char* sourceCode) {
 
         Scanner scanner(sourceCode);
         std::vector<Token> cppTokens = scanner.scanAll();
@@ -197,8 +202,7 @@ extern "C" {
     }
 
     // The function C# will call to free memory
-    __attribute__((visibility("default"))) 
-    void FreeResult(LexResult result) {
+    API_EXPORT void FreeResult(LexResult result) {
         for (int i = 0; i < result.count; i++) {
             free((void*)result.tokens[i].lexeme); // Free the strings
         }

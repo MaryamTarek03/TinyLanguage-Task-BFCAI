@@ -11,8 +11,15 @@ Console.WriteLine($"Current directory: {currentDir}");
 // Single file apps don't have a "base directory" like traditional .NET apps, so we use the assembly location
 NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), (libraryName, assembly, searchPath) =>
 {
-    if (libraryName == "liblexer.so")
-        return NativeLibrary.Load(Path.Combine(currentDir, libraryName));
+    if (libraryName == "liblexer")
+    {
+        // Detect the operating system
+        string extension = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".dll" : ".so";
+        string fullPath = Path.Combine(currentDir, libraryName + extension);
+        
+        Console.WriteLine($"Attempting to load native library from: {fullPath}");
+        return NativeLibrary.Load(fullPath);
+    }
     return IntPtr.Zero;
 });
 
@@ -52,11 +59,51 @@ app.MapPost("/api/tokenize", async (HttpContext context) =>
     return Results.Json(outputData);
 });
 
+app.MapPost("/api/parse", async (HttpContext context) =>
+{
+    // Try to read useTerminators from query string, defaulting to false if not provided
+    bool useTerminators = context.Request.Query["useTerminators"] == "true";
+
+    using var reader = new StreamReader(context.Request.Body);
+    string code = await reader.ReadToEndAsync();
+
+    // Call the C++ Parser engine
+    CParseResult result = NativeLexer.ParseCode(code, useTerminators);
+
+    var errorList = new List<object>();
+
+    if (result.errorCount > 0 && result.errors != IntPtr.Zero)
+    {
+        // Calculate the size of one struct so we can jump through memory
+        int structSize = Marshal.SizeOf(typeof(CSyntaxError));
+
+        for (int i = 0; i < result.errorCount; i++)
+        {
+            // Jump to the correct memory address for this specific error
+            IntPtr currentPtr = IntPtr.Add(result.errors, i * structSize);
+            CSyntaxError error = Marshal.PtrToStructure<CSyntaxError>(currentPtr);
+
+            string message = Marshal.PtrToStringUTF8(error.message) ?? "Unknown Error";
+
+            errorList.Add(new { 
+                line = error.line, 
+                charIndex = error.charIndex, 
+                message = message 
+            });
+        }
+    }
+
+    // Clean up the C++ RAM!
+    NativeLexer.FreeParseResult(result);
+
+    // Return the JSON list to the web frontend
+    return Results.Json(errorList);
+});
+
 app.Run();
 
-// --- P/Invoke Definitions ---
 
-// Mirror the C++ enum exactly so we can translate the integers back to strings
+// --- 1. Lexer Types ---
 public enum TokenType {
     IF_KW, THEN_KW, ELSE_KW, END_KW, REPEAT_KW, UNTIL_KW, READ_KW, WRITE_KW,
     ID, NUMBER, STRING,
@@ -85,11 +132,39 @@ public struct LexResult
 
 public static class Lexer
 {
-    private const string LibName = "liblexer.so"; 
+    private const string LibName = "liblexer"; 
 
     [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
     public static extern LexResult Tokenize([MarshalAs(UnmanagedType.LPUTF8Str)] string sourceCode);
 
     [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
     public static extern void FreeResult(LexResult result);
+}
+
+// --- 2. Parser Types ---
+[StructLayout(LayoutKind.Sequential)]
+public struct CSyntaxError
+{
+    public int line;
+    public int charIndex;
+    public IntPtr message;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct CParseResult
+{
+    public IntPtr errors; 
+    public int errorCount;
+}
+
+// Wrapping your parser methods in their own static class!
+public static class NativeLexer
+{
+    private const string LibName = "liblexer";
+
+    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern CParseResult ParseCode([MarshalAs(UnmanagedType.LPUTF8Str)] string sourceCode, bool useTerminators = true);
+
+    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void FreeParseResult(CParseResult result);
 }

@@ -1,29 +1,46 @@
 #include <iostream>
-#include "lexer.cpp"
+#include <vector>
+#include <string>
+
+#include "parser.cpp"
 
 int main() {
-    // Example
-    // std::string sourceCode =
-    //     "if x = 10 then\n"
-    //     "  x := x + 1;\n"
-    //     "end\n"
-    //     "{ this is a comment and should be ignored }\n";
+    // A proper multi-line test program 
+    std::string sourceCode = 
+        "read x;\n"
+        "if 0 < x then\n"
+        "  fact := 1;\n"
+        "  repeat\n"
+        "    fact := fact * x;\n"
+        "    x := x - 1;\n"
+        "  until x = 0;\n"
+        "  write \"Factorial is \", fact\n;"
+        "else\n"
+        "  write \"Input must be a positive integer.\";\n"
+        "end;";
 
-    std::string sourceCode;
-    std::getline(std::cin, sourceCode); // Read a line of input
-
+    std::cout << "--- TINY COMPILER: LEXER PHASE ---\n";
+    
     Scanner scanner(sourceCode);
-    std::vector<Token> tokens = scanner.scanAll();
+    std::vector<Token> tokens = scanner.scanAll(); // Using your awesome helper method!
 
-    std::cout << "Line\tToken Type\tLexeme\n";
-    std::cout << "--------------------------------------\n";
-    for (const auto &token : tokens)
-    {
-        if (token.type == ENDFILE)
-            break;
-        std::cout << token.line << "\t"
-                  << token.toString() << "\t\t"
-                  << token.lexeme << "\n";
+    std::cout << "Lexing complete. Found " << tokens.size() << " tokens.\n\n";
+
+    std::cout << "--- TINY COMPILER: PARSER PHASE ---\n";
+    
+    // 1. Pass the tokens into the new Parser
+    Parser parser(tokens);
+    parser.useTerminators = true; // Enable C#/C++ style terminators (semicolon)
+
+    // 2. Build the Abstract Syntax Tree
+    TreeNode* astRoot = parser.parse();
+
+    // 3. Print the Tree visually to the console
+    if (astRoot != nullptr) {
+        std::cout << "\nAbstract Syntax Tree Successfully Built:\n\n";
+        parser.printTree(astRoot, 0); 
+    } else {
+        std::cout << "Failed to build the AST.\n";
     }
 
     std::cin.get();

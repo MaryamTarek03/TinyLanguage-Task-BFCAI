@@ -132,6 +132,74 @@ body {
   align-items: center;
   gap: 15px;
 }
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+/* Switch Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: 0.3s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text);
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--accent);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+  background-color: white;
+}
+
+.toggle-label {
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .theme-switcher {
   padding: 8px 12px;
   background: var(--panel);
@@ -197,21 +265,47 @@ button:hover {
   min-height: 0;
 }
 
-/* Left Panel */
-textarea {
+/* Left Panel & Editor Shared Styles */
+.editor-wrapper {
+  position: relative;
+  display: flex;
   flex: 1;
   background: var(--panel);
-  color: inherit;
   border: 1px solid var(--border);
   border-radius: 5px;
+  overflow: hidden; /* Important so inner scroll elements fit */
+}
+.editor-wrapper:focus-within {
+  border-color: var(--accent);
+}
+
+.line-numbers {
+  width: 40px;
+  text-align: right;
+  padding: 15px 10px 15px 5px;
+  background: var(--bg);
+  color: var(--inactive);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  user-select: none;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  box-sizing: border-box;
+}
+
+textarea {
+  flex: 1;
+  background: transparent;
+  color: inherit;
+  border: none;
+  font-family: inherit;
   font-size: 16px;
   line-height: 1.5;
   padding: 15px;
   resize: none;
   outline: none;
-}
-textarea:focus {
-  border-color: var(--accent);
+  white-space: pre;
 }
 
 /* Right Panel (Tabs + Content) */
@@ -250,28 +344,69 @@ textarea:focus {
   border-bottom: 2px solid var(--accent);
   background: var(--panel);
 }
+.error-badge {
+  background: var(--unknown);
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 11px;
+  margin-left: 5px;
+  font-weight: bold;
+}
 
+.error-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+.error-list li {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: monospace;
+}
+.error-list li span.line-col {
+  color: var(--keyword);
+  font-weight: bold;
+  margin-right: 10px;
+}
+.error-list li span.msg {
+  color: var(--unknown);
+}
 /* Tab Contents */
 .tab-content {
   flex-grow: 1;
-  padding: 15px;
-  overflow-y: auto;
   display: none;
+  flex-direction: column;
 }
 .tab-content.active {
-  display: block;
-}
-
-.output-container {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  line-height: 1.5;
-  font-size: 16px;
-  color: var(--inactive); /* Comments */
+  display: flex;
 }
 
 #table {
   padding: 0;
+  overflow-y: auto;
+}
+
+#errors {
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.highlight-wrapper {
+  border: none;
+  border-radius: 0;
+}
+
+.output-container {
+  flex: 1;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.5;
+  font-size: 16px;
+  padding: 15px;
+  color: var(--inactive); /* Comments */
+  overflow: auto;
 }
 
 th {
@@ -332,6 +467,12 @@ tr:hover {
   text-decoration: underline wavy red;
   text-underline-offset: 3px;
   font-weight: bold;
+}
+
+.syntax-error-highlight {
+  text-decoration: underline wavy var(--unknown);
+  text-underline-offset: 3px;
+  background-color: rgba(244, 71, 71, 0.2);
 }
 
 .tooltip {
