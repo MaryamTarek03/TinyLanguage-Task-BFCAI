@@ -19,8 +19,8 @@ Follow these steps to get the application running locally:
 First, clone the repository to your local machine and navigate into the folder:
 
 ```bash
-git clone <REPOSITORY_URL_HERE>
-cd <REPOSITORY_NAME_HERE>
+git clone https://github.com/MaryamTarek03/TinyLanguage-Task-BFCAI.git
+cd TinyLanguage-Task-BFCAI
 ```
 
 ### 2. Compile the C++ Backend
