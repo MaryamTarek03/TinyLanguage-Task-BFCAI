@@ -96,13 +96,13 @@ public:
                 lexeme += advance();
             }
             
-            // // If the number is immediately followed by a letter, it's a lexical error (e.g., "6f")
-            // if (isalpha(peek())) {
-            //     while (isalnum(peek())) {
-            //         lexeme += advance();
-            //     }
-            //     return {UNKNOWN, lexeme, line, startPos, (int)lexeme.length()};
-            // }
+            // If the number is immediately followed by a letter, it's a lexical error (e.g., "6f")
+            if (isalpha(peek())) {
+                while (isalnum(peek())) {
+                    lexeme += advance();
+                }
+                return {UNKNOWN, lexeme, line, startPos, (int)lexeme.length()};
+            }
             
             return {NUMBER, lexeme, line, startPos, (int)lexeme.length()};
         }
