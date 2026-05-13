@@ -42,11 +42,17 @@ g++ -shared -o "src/server/liblexer.dll" "src/backend/parser.cpp"
 ```
 
 _Using Visual Studio (MSVC):_
-Open the "Developer Command Prompt for VS" and run:
-
-```cmd
-cl /LD src\backend\parser.cpp /Fesrc\server\liblexer.dll
-```
+1. Open the "x64 Native Tools Command Prompt"
+2. Make sure you're in the correct path:
+    ```bash
+    D:
+    cd "path\to\downloaded\project"
+    ```
+    _Make sure to use your drive's letter & the actual path_
+3. Run the following:
+    ```cmd
+    cl /LD src\backend\parser.cpp /Fesrc\server\liblexer.dll
+    ```
 
 ### 3. Start the Backend Server
 
