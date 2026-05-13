@@ -29,7 +29,8 @@ private:
         if (currentToken.type == expected) {
             advance();
         } else {
-            std::string msg = "Expected " + tokenToString(expected) + " but got '" + currentToken.lexeme + "'";
+            std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+            std::string msg = typeStr + "Expected " + tokenToString(expected) + " but got '" + currentToken.lexeme + "'";
             errors.push_back({currentToken.line, currentToken.startIndex, msg});
         }
     }
@@ -128,7 +129,8 @@ private:
             case READ_KW:   t = read_stmt(); break;
             case WRITE_KW:  t = write_stmt(); break;
             default: {
-                std::string msg = "Unexpected token '" + currentToken.lexeme + "'";
+                std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+                std::string msg = typeStr + "Unexpected token '" + currentToken.lexeme + "'";
                 errors.push_back({currentToken.line, currentToken.startIndex, msg});
                 advance(); // Skip the bad token to prevent infinite loops
                 break;
@@ -311,7 +313,8 @@ private:
             match(PUNCTUATION); // Match the ')'
         } 
         else {
-            std::string msg = "Unexpected token in expression -> '" + currentToken.lexeme + "'";
+            std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+            std::string msg = typeStr + "Unexpected token in expression -> '" + currentToken.lexeme + "'";
             errors.push_back({currentToken.line, currentToken.startIndex, msg});
             advance();
         }
@@ -374,7 +377,8 @@ private:
     TreeNode* parse() {
         TreeNode* root = stmt_sequence();
         if (currentToken.type != ENDFILE) {
-            std::string msg = "Unexpected tokens at end of file: '" + currentToken.lexeme + "'";
+            std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+            std::string msg = typeStr + "Unexpected tokens at end of file: '" + currentToken.lexeme + "'";
             errors.push_back({currentToken.line, currentToken.startIndex, msg});
         }
         return root;
