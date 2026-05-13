@@ -16,6 +16,8 @@ private:
     int tokenIndex;
     Token currentToken;
 
+    bool panicMode = false;
+
     // Helper: Move to the next token
     void advance() {
         if (tokenIndex < tokens.size() - 1) {
@@ -24,14 +26,33 @@ private:
         }
     }
 
+    // Panic Mode Recovery: Skip tokens until we find a statement boundary
+    void synchronize() {
+        panicMode = false;
+        while (currentToken.type != ENDFILE) {
+            if (currentToken.type == SEMICOLON || 
+                currentToken.type == END_KW || 
+                currentToken.type == UNTIL_KW || 
+                currentToken.type == ELSE_KW ||
+                isStatementStart(currentToken.type)) {
+                return; // Reached a safe starting point
+            }
+            advance();
+        }
+    }
+
     // Helper: Assert the current token is what we expect, then advance
     void match(TokenType expected) {
         if (currentToken.type == expected) {
             advance();
         } else {
-            std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
-            std::string msg = typeStr + "Expected " + tokenToString(expected) + " but got '" + currentToken.lexeme + "'";
-            errors.push_back({currentToken.line, currentToken.startIndex, msg});
+            if (!panicMode) {
+                std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+                std::string msg = typeStr + "Expected " + tokenToString(expected) + " but got '" + currentToken.lexeme + "'";
+                errors.push_back({currentToken.line, currentToken.startIndex, msg});
+                panicMode = true; // Enter panic mode
+            }
+            synchronize(); // Try to recover
         }
     }
 
@@ -102,6 +123,10 @@ private:
                 match(SEMICOLON);
             }
             
+            
+            // Re-arm panic mode status before processing next statement
+            panicMode = false;
+            
             TreeNode* q = statement();
             
             if (q != nullptr) {
@@ -129,10 +154,14 @@ private:
             case READ_KW:   t = read_stmt(); break;
             case WRITE_KW:  t = write_stmt(); break;
             default: {
-                std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
-                std::string msg = typeStr + "Unexpected token '" + currentToken.lexeme + "'";
-                errors.push_back({currentToken.line, currentToken.startIndex, msg});
-                advance(); // Skip the bad token to prevent infinite loops
+                if (!panicMode) {
+                    std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+                    std::string msg = typeStr + "Unexpected token '" + currentToken.lexeme + "'";
+                    errors.push_back({currentToken.line, currentToken.startIndex, msg});
+                    panicMode = true;
+                }
+                advance(); // Skip the bad token
+                synchronize(); // Try to recover
                 break;
             }
         }
@@ -313,10 +342,14 @@ private:
             match(PUNCTUATION); // Match the ')'
         } 
         else {
-            std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
-            std::string msg = typeStr + "Unexpected token in expression -> '" + currentToken.lexeme + "'";
-            errors.push_back({currentToken.line, currentToken.startIndex, msg});
+            if (!panicMode) {
+                std::string typeStr = (currentToken.type == UNKNOWN) ? "Lexical Error: " : "Syntax Error: ";
+                std::string msg = typeStr + "Unexpected token in expression -> '" + currentToken.lexeme + "'";
+                errors.push_back({currentToken.line, currentToken.startIndex, msg});
+                panicMode = true;
+            }
             advance();
+            synchronize(); // Try to recover
         }
         
         return t;
